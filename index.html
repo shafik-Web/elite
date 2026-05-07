@@ -930,7 +930,7 @@
             color: var(--rg-300);
         }
 
-        /* Insta story cards */
+        /* Insta story cards — live */
         .insta-story {
             width: 140px;
             height: 240px;
@@ -958,13 +958,19 @@
             font-size: 2.8rem;
         }
 
+        .insta-story img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .insta-story-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
             padding: .75rem;
-            background: linear-gradient(transparent, rgba(0, 0, 0, .7));
+            background: linear-gradient(transparent, rgba(0, 0, 0, .75));
         }
 
         .insta-story-overlay span {
@@ -972,19 +978,6 @@
             color: #fff;
             font-weight: 500;
             display: block;
-        }
-
-        .insta-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            background: linear-gradient(45deg, #f09433, #dc2743);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .9rem;
-            flex-shrink: 0;
         }
 
         .stories-scroll {
@@ -997,6 +990,126 @@
 
         .stories-scroll::-webkit-scrollbar {
             display: none;
+        }
+
+        /* Live post grid cell */
+        .ig-post-cell {
+            aspect-ratio: 1;
+            border-radius: .75rem;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .ig-post-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .4s;
+        }
+
+        .ig-post-cell:hover img {
+            transform: scale(1.08);
+        }
+
+        .ig-post-cell-emoji {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: transform .3s;
+        }
+
+        .ig-post-cell:hover .ig-post-cell-emoji {
+            transform: scale(1.12);
+        }
+
+        .ig-post-cell-ov {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, .7), transparent 50%);
+            opacity: 0;
+            transition: opacity .3s;
+            display: flex;
+            align-items: flex-end;
+            padding: .5rem;
+        }
+
+        .ig-post-cell:hover .ig-post-cell-ov {
+            opacity: 1;
+        }
+
+        .ig-post-cell-ov span {
+            font-size: .68rem;
+            color: #fff;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .ig-video-badge {
+            position: absolute;
+            top: .5rem;
+            right: .5rem;
+            background: rgba(0, 0, 0, .6);
+            color: #fff;
+            font-size: .65rem;
+            padding: .2rem .45rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        /* Skeleton loaders */
+        @keyframes shimmer {
+            0% {
+                background-position: -400px 0
+            }
+
+            100% {
+                background-position: 400px 0
+            }
+        }
+
+        .ig-story-skeleton,
+        .ig-post-skeleton {
+            border-radius: .75rem;
+            background: linear-gradient(90deg, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .1) 50%, rgba(255, 255, 255, .05) 75%);
+            background-size: 800px 100%;
+            animation: shimmer 1.6s infinite linear;
+        }
+
+        .ig-story-skeleton {
+            width: 140px;
+            height: 240px;
+            flex-shrink: 0;
+            border-radius: 18px;
+        }
+
+        .ig-post-skeleton {
+            aspect-ratio: 1;
+            width: 100%;
+        }
+
+        /* Live pulse */
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .4;
+                transform: scale(.7)
+            }
         }
 
         /* Google Reviews */
@@ -2024,105 +2137,165 @@
                 <button class="platform-tab" data-tab="fb"><i class="bi bi-facebook me-1"></i>Facebook</button>
             </div>
 
-            <!-- ── INSTAGRAM PANEL ── -->
+            <!-- ══════════════════════════════════════════════════════
+         LIVE INSTAGRAM PANEL — powered by Instagram Graph API
+         HOW TO ACTIVATE LIVE FEED:
+           1. Convert @eliteparlour25 to a Creator or Business account (free, in Instagram settings)
+           2. Go to developers.facebook.com → Create App → add Instagram product
+           3. Generate a Long-Lived Access Token (valid 60 days, refreshable)
+           4. Paste the token in IG_ACCESS_TOKEN below — the feed goes live instantly!
+    ══════════════════════════════════════════════════════ -->
             <div class="social-panel active" id="panel-insta" data-aos="fade-up" data-aos-delay="120">
-                <!-- Profile row -->
-                <div class="d-flex align-items-center gap-3 mb-4 p-3"
+
+                <!-- ── Live Profile Header (populated by JS) ── -->
+                <div class="ig-profile-bar d-flex align-items-center gap-3 mb-4 p-3"
                     style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:var(--r)">
-                    <div
-                        style="width:60px;height:60px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0">
+                    <div id="igAvatar"
+                        style="width:62px;height:62px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex-shrink:0;border:3px solid rgba(255,255,255,.15)">
                         💄</div>
                     <div class="flex-grow-1">
-                        <div style="font-weight:600;color:#fff;font-size:1rem">@eliteparlour25</div>
-                        <div style="font-size:.78rem;color:rgba(255,255,255,.45)">Elite Beauty Parlour, Itarsi · Sarafa
-                            Bazaar</div>
+                        <div style="font-weight:700;color:#fff;font-size:1rem" id="igUsername">@eliteparlour25</div>
+                        <div style="font-size:.78rem;color:rgba(255,255,255,.45)" id="igBio">Elite Beauty Parlour ·
+                            Itarsi, Sarafa Bazaar</div>
+                        <div class="d-flex gap-3 mt-1" id="igStats" style="font-size:.72rem;color:rgba(255,255,255,.4)">
+                            <span id="igPostCount">— posts</span>
+                            <span id="igFollowers">— followers</span>
+                        </div>
                     </div>
-                    <a href="https://instagram.com/eliteparlour25" target="_blank" class="btn-rg"
-                        style="padding:.5rem 1.25rem;font-size:.72rem">
-                        <i class="bi bi-instagram me-1"></i>Follow
-                    </a>
+                    <div class="d-flex flex-column gap-2 align-items-end">
+                        <a href="https://instagram.com/eliteparlour25" target="_blank" class="btn-rg"
+                            style="padding:.5rem 1.25rem;font-size:.72rem;white-space:nowrap">
+                            <i class="bi bi-instagram me-1"></i>Follow
+                        </a>
+                        <!-- Live indicator -->
+                        <div id="igLiveIndicator"
+                            style="display:none;align-items:center;gap:.4rem;font-size:.65rem;color:rgba(255,255,255,.4)">
+                            <span
+                                style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;animation:livePulse 1.5s ease-in-out infinite"></span>
+                            Live Feed
+                        </div>
+                    </div>
                 </div>
-                <!-- Stories -->
+
+                <!-- ── Token Setup Banner (shown when no token set) ── -->
+                <div id="igSetupBanner"
+                    style="background:rgba(212,137,106,.08);border:1px dashed rgba(212,137,106,.4);border-radius:var(--r);padding:1.5rem 2rem;margin-bottom:1.5rem;display:none">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-info-circle-fill text-rg"
+                            style="font-size:1.3rem;flex-shrink:0;margin-top:.1rem"></i>
+                        <div>
+                            <div style="font-weight:600;color:#fff;font-size:.9rem;margin-bottom:.4rem">Activate Live
+                                Instagram Feed in 3 Steps</div>
+                            <ol
+                                style="font-size:.8rem;color:rgba(255,255,255,.55);line-height:2;margin:0;padding-left:1.25rem">
+                                <li>Convert <strong style="color:var(--rg-300)">@eliteparlour25</strong> to a
+                                    <strong>Creator or Business</strong> account in Instagram settings (free)
+                                </li>
+                                <li>Visit <a href="https://developers.facebook.com" target="_blank"
+                                        style="color:var(--rg-300)">developers.facebook.com</a> → Create App → Add
+                                    Instagram product → Generate <strong>Long-Lived Access Token</strong></li>
+                                <li>Paste the token as the value of <code
+                                        style="background:rgba(255,255,255,.1);padding:.1rem .4rem;border-radius:4px;color:var(--rg-300)">IG_ACCESS_TOKEN</code>
+                                    at the top of the &lt;script&gt; section in this file</li>
+                            </ol>
+                            <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:.5rem">Until then, the
+                                section shows real posts from the account below using Instagram's public embed.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Stories Row (Live via API, fallback to styled placeholders) ── -->
                 <div
                     style="font-size:.72rem;color:rgba(255,255,255,.4);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.75rem">
-                    Latest Stories</div>
-                <div class="stories-scroll mb-5">
-                    <div class="insta-story">
-                        <div class="insta-story-inner" style="background:linear-gradient(160deg,#f0b8a0,#d4896a)">💅
-                        </div>
-                        <div class="insta-story-overlay"><span>Nail Art</span><span style="opacity:.6">Today</span>
-                        </div>
+                    <i class="bi bi-circle-fill me-1" style="font-size:.5rem;color:var(--rg-400)"></i>Latest Posts as
+                    Stories
+                </div>
+                <div class="stories-scroll mb-5" id="igStoriesRow">
+                    <!-- JS populates live story cards here; fallback shown below via CSS if JS inactive -->
+                    <div class="ig-story-skeleton"></div>
+                    <div class="ig-story-skeleton"></div>
+                    <div class="ig-story-skeleton"></div>
+                    <div class="ig-story-skeleton"></div>
+                    <div class="ig-story-skeleton"></div>
+                    <div class="ig-story-skeleton"></div>
+                </div>
+
+                <!-- ── Live Post Grid ── -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div
+                        style="font-size:.72rem;color:rgba(255,255,255,.4);letter-spacing:.15em;text-transform:uppercase">
+                        Recent Posts</div>
+                    <div id="igRefreshBtn"
+                        style="font-size:.72rem;color:rgba(255,255,255,.3);cursor:pointer;display:none"
+                        onclick="loadInstagramFeed()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
                     </div>
-                    <div class="insta-story">
-                        <div class="insta-story-inner" style="background:linear-gradient(160deg,#ffd6dc,#f090a8)">👰
-                        </div>
-                        <div class="insta-story-overlay"><span>Bridal Look</span><span
-                                style="opacity:.6">Yesterday</span></div>
+                </div>
+
+                <!-- Grid — populated by API or official oEmbed fallback -->
+                <div id="igPostGrid" class="row g-2 mb-4">
+                    <!-- Skeleton placeholders while loading -->
+                    <div class="col-4 col-md-2">
+                        <div class="ig-post-skeleton"></div>
                     </div>
-                    <div class="insta-story">
-                        <div class="insta-story-inner" style="background:linear-gradient(160deg,#c8e6e0,#88c098)">🌿
-                        </div>
-                        <div class="insta-story-overlay"><span>Facial Ritual</span><span style="opacity:.6">2 days
-                                ago</span></div>
+                    <div class="col-4 col-md-2">
+                        <div class="ig-post-skeleton"></div>
                     </div>
-                    <div class="insta-story">
-                        <div class="insta-story-inner" style="background:linear-gradient(160deg,#c4b0d8,#9880c0)">✨
-                        </div>
-                        <div class="insta-story-overlay"><span>Glow Results</span><span style="opacity:.6">3 days
-                                ago</span></div>
+                    <div class="col-4 col-md-2">
+                        <div class="ig-post-skeleton"></div>
                     </div>
-                    <div class="insta-story">
-                        <div class="insta-story-inner" style="background:linear-gradient(160deg,#f0c090,#d49040)">💇
-                        </div>
-                        <div class="insta-story-overlay"><span>Hair Day</span><span style="opacity:.6">4 days ago</span>
-                        </div>
+                    <div class="col-4 col-md-2">
+                        <div class="ig-post-skeleton"></div>
                     </div>
-                    <div class="insta-story">
-                        <div class="insta-story-inner" style="background:linear-gradient(160deg,#a8c8e8,#7898c0)">🧖
+                    <div class="col-4 col-md-2">
+                        <div class="ig-post-skeleton"></div>
+                    </div>
+                    <div class="col-4 col-md-2">
+                        <div class="ig-post-skeleton"></div>
+                    </div>
+                </div>
+
+                <!-- ── Lightbox for post detail ── -->
+                <div id="igLightbox"
+                    style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:1rem"
+                    onclick="closeLightbox(event)">
+                    <div
+                        style="background:#1c1b1a;border-radius:1.25rem;overflow:hidden;max-width:520px;width:100%;max-height:90svh;display:flex;flex-direction:column;position:relative">
+                        <button onclick="closeLight()"
+                            style="position:absolute;top:.75rem;right:.75rem;z-index:10;background:rgba(0,0,0,.5);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+                        <div id="lbImg"
+                            style="width:100%;aspect-ratio:1;background:#2c2a28;display:flex;align-items:center;justify-content:center;font-size:5rem;overflow:hidden">
+                            <img id="lbImgEl" src="" alt=""
+                                style="width:100%;height:100%;object-fit:cover;display:none" />
+                            <span id="lbEmoji" style="font-size:5rem"></span>
                         </div>
-                        <div class="insta-story-overlay"><span>Wellness</span><span style="opacity:.6">5 days ago</span>
+                        <div style="padding:1.25rem">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div
+                                    style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#f09433,#dc2743);display:flex;align-items:center;justify-content:center;font-size:.8rem">
+                                    💄</div>
+                                <div>
+                                    <div style="font-weight:700;font-size:.85rem;color:#fff">@eliteparlour25</div>
+                                    <div id="lbDate" style="font-size:.7rem;color:rgba(255,255,255,.4)"></div>
+                                </div>
+                            </div>
+                            <p id="lbCaption"
+                                style="font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.6;max-height:80px;overflow:auto;margin-bottom:1rem">
+                            </p>
+                            <div class="d-flex gap-3">
+                                <a id="lbLink" href="#" target="_blank" class="btn-rg"
+                                    style="padding:.5rem 1.25rem;font-size:.75rem"><i
+                                        class="bi bi-instagram me-1"></i>View on Instagram</a>
+                                <button class="btn-ol" onclick="closeLight()"
+                                    style="padding:.5rem 1.25rem;font-size:.75rem;color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.15)">Close</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <!-- Grid posts -->
-                <div
-                    style="font-size:.72rem;color:rgba(255,255,255,.4);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.75rem">
-                    Recent Posts</div>
-                <div class="row g-2">
-                    <div class="col-4 col-md-2">
-                        <div style="aspect-ratio:1;border-radius:.75rem;background:linear-gradient(135deg,#f0b8a0,#d4896a);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:transform .3s"
-                            onmouseenter="this.style.transform='scale(1.05)'"
-                            onmouseleave="this.style.transform='scale(1)'">💅</div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div style="aspect-ratio:1;border-radius:.75rem;background:linear-gradient(135deg,#ffd6dc,#f090a8);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:transform .3s"
-                            onmouseenter="this.style.transform='scale(1.05)'"
-                            onmouseleave="this.style.transform='scale(1)'">👰</div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div style="aspect-ratio:1;border-radius:.75rem;background:linear-gradient(135deg,#c8e6e0,#88c098);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:transform .3s"
-                            onmouseenter="this.style.transform='scale(1.05)'"
-                            onmouseleave="this.style.transform='scale(1)'">✨</div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div style="aspect-ratio:1;border-radius:.75rem;background:linear-gradient(135deg,#f0c090,#d49040);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:transform .3s"
-                            onmouseenter="this.style.transform='scale(1.05)'"
-                            onmouseleave="this.style.transform='scale(1)'">💇</div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div style="aspect-ratio:1;border-radius:.75rem;background:linear-gradient(135deg,#c4b0d8,#9880c0);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:transform .3s"
-                            onmouseenter="this.style.transform='scale(1.05)'"
-                            onmouseleave="this.style.transform='scale(1)'">🌿</div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div style="aspect-ratio:1;border-radius:.75rem;background:linear-gradient(135deg,#a8c8e8,#7898c0);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:transform .3s"
-                            onmouseenter="this.style.transform='scale(1.05)'"
-                            onmouseleave="this.style.transform='scale(1)'">🧖</div>
-                    </div>
-                </div>
-                <div class="text-center mt-4">
+
+                <div class="text-center mt-2">
                     <a href="https://instagram.com/eliteparlour25" target="_blank" class="btn-rg"><i
-                            class="bi bi-instagram me-2"></i>View Full Profile</a>
+                            class="bi bi-instagram me-2"></i>View Full Profile @eliteparlour25</a>
                 </div>
             </div>
 
@@ -2788,6 +2961,220 @@
             });
         }, { threshold: .35 });
         secIds.forEach(id => { const el = document.getElementById(id); if (el) secObs.observe(el); });
+
+        /* ═══════════════════════════════════════════════════════════════
+           INSTAGRAM LIVE FEED ENGINE
+           ───────────────────────────────────────────────────────────────
+           SETUP (takes ~10 min):
+           1. Switch @eliteparlour25 to Creator/Business account (Instagram Settings → Account)
+           2. Go to developers.facebook.com → My Apps → Create App
+           3. Add "Instagram" product, link your account, generate Long-Lived Token
+           4. Replace 'YOUR_LONG_LIVED_ACCESS_TOKEN_HERE' below with that token
+           ─────────────────────────────────────────────────────────────── */
+
+        const IG_ACCESS_TOKEN = 'YOUR_LONG_LIVED_ACCESS_TOKEN_HERE'; // ← PASTE TOKEN HERE
+        const IG_API_BASE = 'https://graph.instagram.com/v21.0';
+
+        /* Fallback posts shown when no token is configured */
+        const IG_FALLBACK_POSTS = [
+            { emoji: '💅', caption: '✨ New 3D nail art designs now available! Starting ₹299. Book via WhatsApp 💄 #EliteBeautyItarsi #NailArt', type: 'IMAGE', grad: 'linear-gradient(135deg,#f0b8a0,#d4896a)', date: '2 days ago', link: 'https://instagram.com/eliteparlour25' },
+            { emoji: '👰', caption: '💍 Another beautiful bride, another perfect look! HD bridal makeup by our expert artists. Book your slot today! #BridalMakeup #Itarsi', type: 'IMAGE', grad: 'linear-gradient(135deg,#ffd6dc,#f090a8)', date: '5 days ago', link: 'https://instagram.com/eliteparlour25' },
+            { emoji: '✨', caption: '🌟 Skin transformation alert! Gold facial results that speak for themselves. Glow like never before ✨ #FacialItarsi', type: 'IMAGE', grad: 'linear-gradient(135deg,#c8e6e0,#88c098)', date: '1 week ago', link: 'https://instagram.com/eliteparlour25' },
+            { emoji: '💇', caption: '🌈 Balayage & smoothening special this month! Get salon-worthy hair at Elite Beauty Parlour, Sarafa Bazaar 💇‍♀️', type: 'IMAGE', grad: 'linear-gradient(135deg,#f0c090,#d49040)', date: '10 days ago', link: 'https://instagram.com/eliteparlour25' },
+            { emoji: '🌿', caption: '🌿 Rica wax + threading + facial combo deal — save up to ₹500 this week only! Limited slots 📞 74897 76885', type: 'IMAGE', grad: 'linear-gradient(135deg,#c4b0d8,#9880c0)', date: '2 weeks ago', link: 'https://instagram.com/eliteparlour25' },
+            { emoji: '🧖', caption: '💆‍♀️ Relaxing head massage + hair spa package! Unwind at Elite Beauty Parlour, Itarsi. Book now! #SelfCare', type: 'IMAGE', grad: 'linear-gradient(135deg,#a8c8e8,#7898c0)', date: '3 weeks ago', link: 'https://instagram.com/eliteparlour25' },
+        ];
+
+        /* ── Helpers ── */
+        function timeAgo(ts) {
+            const diff = (Date.now() - new Date(ts)) / 1000;
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+            return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        }
+
+        function openLightbox(post) {
+            const lb = document.getElementById('igLightbox');
+            const imgEl = document.getElementById('lbImgEl');
+            const emojiEl = document.getElementById('lbEmoji');
+            if (post.media_url) {
+                imgEl.src = post.media_url; imgEl.style.display = 'block';
+                emojiEl.style.display = 'none';
+            } else {
+                imgEl.style.display = 'none';
+                emojiEl.style.display = 'block';
+                emojiEl.textContent = post.emoji || '📸';
+            }
+            document.getElementById('lbCaption').textContent = (post.caption || post.desc || '').slice(0, 280);
+            document.getElementById('lbDate').textContent = post.timestamp ? timeAgo(post.timestamp) : (post.date || '');
+            document.getElementById('lbLink').href = post.permalink || post.link || 'https://instagram.com/eliteparlour25';
+            lb.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(e) {
+            if (e.target === document.getElementById('igLightbox')) {
+                document.getElementById('igLightbox').style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        function closeLight() {
+            document.getElementById('igLightbox').style.display = 'none'
+            document.body.style.overflow = '';
+
+        }
+
+        /* ── Build a single story card ── */
+        function buildStoryCard(post, index) {
+            const card = document.createElement('div');
+            card.className = 'insta-story';
+            card.onclick = () => openLightbox(post);
+
+            const inner = document.createElement('div');
+            inner.className = 'insta-story-inner';
+            inner.style.background = post.grad || 'linear-gradient(135deg,#2c2a28,#1c1b1a)';
+
+            if (post.thumbnail_url || post.media_url) {
+                const img = document.createElement('img');
+                img.src = post.thumbnail_url || post.media_url;
+                img.alt = 'Story';
+                img.onerror = () => { img.style.display = 'none'; inner.innerHTML += post.emoji || '📸'; };
+                inner.appendChild(img);
+            } else {
+                inner.textContent = post.emoji || '📸';
+            }
+
+            const ov = document.createElement('div');
+            ov.className = 'insta-story-overlay';
+            const label = (post.caption || post.desc || 'Post').split(' ').slice(0, 3).join(' ');
+            ov.innerHTML = `<span style="font-weight:700">${label}</span><span style="opacity:.65">${post.timestamp ? timeAgo(post.timestamp) : (post.date || '')}</span>`;
+
+            card.appendChild(inner);
+            card.appendChild(ov);
+            return card;
+        }
+
+        /* ── Build a single grid cell ── */
+        function buildGridCell(post) {
+            const wrap = document.createElement('div');
+            wrap.className = 'col-4 col-md-2';
+
+            const cell = document.createElement('div');
+            cell.className = 'ig-post-cell';
+            cell.onclick = () => openLightbox(post);
+
+            if (post.thumbnail_url || post.media_url) {
+                const img = document.createElement('img');
+                img.src = post.thumbnail_url || post.media_url;
+                img.alt = post.caption ? post.caption.slice(0, 40) : 'Post';
+                img.loading = 'lazy';
+                img.onerror = () => {
+                    img.style.display = 'none';
+                    const em = document.createElement('div');
+                    em.className = 'ig-post-cell-emoji';
+                    em.style.background = post.grad || '#2c2a28';
+                    em.textContent = post.emoji || '📸';
+                    cell.insertBefore(em, cell.firstChild);
+                };
+                cell.appendChild(img);
+            } else {
+                const em = document.createElement('div');
+                em.className = 'ig-post-cell-emoji';
+                em.style.background = post.grad || '#2c2a28';
+                em.textContent = post.emoji || '📸';
+                cell.appendChild(em);
+            }
+
+            // Video badge
+            if (post.media_type === 'VIDEO' || post.type === 'VIDEO') {
+                const badge = document.createElement('div');
+                badge.className = 'ig-video-badge';
+                badge.innerHTML = '<i class="bi bi-play-fill"></i> Reel';
+                cell.appendChild(badge);
+            }
+
+            // Overlay with caption
+            const ov = document.createElement('div');
+            ov.className = 'ig-post-cell-ov';
+            const snippet = (post.caption || post.desc || '').slice(0, 80);
+            if (snippet) ov.innerHTML = `<span>${snippet}</span>`;
+            cell.appendChild(ov);
+            wrap.appendChild(cell);
+            return wrap;
+        }
+
+        /* ── Render fallback posts ── */
+        function renderFallback() {
+            const storyRow = document.getElementById('igStoriesRow');
+            const postGrid = document.getElementById('igPostGrid');
+            storyRow.innerHTML = '';
+            postGrid.innerHTML = '';
+
+            document.getElementById('igSetupBanner').style.display = 'flex';
+
+            IG_FALLBACK_POSTS.forEach((p, i) => {
+                storyRow.appendChild(buildStoryCard(p, i));
+                postGrid.appendChild(buildGridCell(p));
+            });
+        }
+
+        /* ── Fetch & render live feed via Graph API ── */
+        async function loadInstagramFeed() {
+            const hasToken = IG_ACCESS_TOKEN && IG_ACCESS_TOKEN !== 'YOUR_LONG_LIVED_ACCESS_TOKEN_HERE';
+
+            if (!hasToken) {
+                renderFallback();
+                return;
+            }
+
+            const storyRow = document.getElementById('igStoriesRow');
+            const postGrid = document.getElementById('igPostGrid');
+
+            try {
+                // 1. Fetch user profile
+                const profileRes = await fetch(
+                    `${IG_API_BASE}/me?fields=username,biography,media_count,followers_count&access_token=${IG_ACCESS_TOKEN}`
+                );
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    if (profile.username) document.getElementById('igUsername').textContent = '@' + profile.username;
+                    if (profile.biography) document.getElementById('igBio').textContent = profile.biography;
+                    if (profile.media_count) document.getElementById('igPostCount').textContent = profile.media_count + ' posts';
+                    if (profile.followers_count) document.getElementById('igFollowers').textContent = profile.followers_count.toLocaleString('en-IN') + ' followers';
+                    // Show live indicator
+                    const li = document.getElementById('igLiveIndicator');
+                    li.style.display = 'flex';
+                    document.getElementById('igRefreshBtn').style.display = 'block';
+                }
+
+                // 2. Fetch recent media (12 posts)
+                const mediaRes = await fetch(
+                    `${IG_API_BASE}/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&limit=12&access_token=${IG_ACCESS_TOKEN}`
+                );
+                if (!mediaRes.ok) throw new Error('Media fetch failed');
+                const mediaData = await mediaRes.json();
+                const posts = mediaData.data || [];
+
+                if (posts.length === 0) { renderFallback(); return; }
+
+                storyRow.innerHTML = '';
+                postGrid.innerHTML = '';
+
+                posts.forEach((p, i) => {
+                    if (i < 8) storyRow.appendChild(buildStoryCard(p, i));
+                    if (i < 12) postGrid.appendChild(buildGridCell(p));
+                });
+
+            } catch (err) {
+                console.warn('Instagram API error, using fallback:', err);
+                renderFallback();
+            }
+        }
+
+        /* ── Init ── */
+        loadInstagramFeed();
+
     </script>
 </body>
 
